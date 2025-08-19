@@ -1,0 +1,828 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Dashboard{% endblock %}
+
+{% block head_extra %}
+<link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;700&display=swap"
+    rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<style>
+    /* Custom CSS from homepage.html */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        /* IoT Theme Colors */
+        --background: hsl(222, 47%, 4%);
+        --foreground: hsl(210, 40%, 98%);
+        --card: hsla(222, 47%, 8%, 0.6);
+        /* Use hsla for transparency */
+        --card-foreground: hsl(210, 40%, 98%);
+        --primary: hsl(195, 100%, 50%);
+        /* Main accent blue */
+        --primary-foreground: hsl(222, 47%, 4%);
+        --secondary: hsl(260, 60%, 65%);
+        /* Purple accent */
+        --accent: hsl(180, 100%, 50%);
+        /* Cyan accent */
+        --muted: hsl(222, 47%, 12%);
+        /* Muted background */
+        --muted-foreground: hsl(215, 20%, 65%);
+        /* Muted text */
+        --border: hsl(222, 47%, 20%);
+        --input: hsl(222, 47%, 12%);
+        --destructive: hsl(0, 84%, 60%);
+
+        /* Gradients */
+        --gradient-primary: linear-gradient(135deg, var(--primary), var(--secondary));
+        --gradient-cyber: linear-gradient(45deg, var(--primary), var(--accent));
+        --gradient-glass: linear-gradient(135deg, hsla(222, 47%, 8%, 0.8), hsla(222, 47%, 12%, 0.4));
+        --gradient-opposite: linear-gradient(135deg, hsl(85, 100%, 50%), var(--accent));
+
+        /* Effects */
+        --shadow-cyber: 0 0 30px hsla(195, 100%, 50%, 0.3);
+        --shadow-glass: 0 8px 32px hsla(222, 47%, 4%, 0.3);
+
+        /* Gauge specific colors */
+        --gauge-bg-color: hsla(220, 20%, 15%, 0.8);
+        --gauge-fill-color: var(--primary);
+        --gauge-needle-color: hsl(0, 100%, 60%);
+        /* Red for needle */
+        --gauge-text-color: var(--foreground);
+        --gauge-unit-color: var(--muted-foreground);
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: var(--background);
+        color: var(--foreground);
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+    }
+
+    /* Enhanced Background Effects */
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image:
+            radial-gradient(circle at 20% 80%, hsla(195, 100%, 50%, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, hsla(260, 60%, 65%, 0.1) 0%, transparent 50%),
+            linear-gradient(0deg, hsla(195, 100%, 50%, 0.08) 1px, transparent 1px),
+            linear-gradient(90deg, hsla(195, 100%, 50%, 0.08) 1px, transparent 1px);
+        background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
+        background-position: 0% 0%, 0% 0%, 0 0, 0 0;
+        opacity: 0.9;
+        z-index: -2;
+        animation: subtle-gradient-shift 20s ease-in-out infinite alternate;
+    }
+
+    /* Animated background grid effect - more pronounced */
+    .animated-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 50px 50px;
+        z-index: -1;
+        animation: pan-grid 60s linear infinite;
+        opacity: 0.5;
+    }
+
+    @keyframes pan-grid {
+        0% {
+            background-position: 0 0;
+        }
+
+        100% {
+            background-position: -50px -50px;
+        }
+    }
+
+    /* Scanline effect for retro tech feel */
+    body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(to bottom,
+                transparent 0px,
+                transparent 1px,
+                rgba(0, 0, 0, 0.03) 1px,
+                rgba(0, 0, 0, 0.03) 2px);
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0.05;
+    }
+
+    .container-fluid-custom {
+        position: relative;
+        z-index: 10;
+        padding: 2rem;
+    }
+
+    .card-custom {
+        background: var(--gradient-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        box-shadow: var(--shadow-glass);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card-custom:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 15px 45px hsla(222, 47%, 4%, 0.5);
+    }
+
+    .card-title-custom {
+        font-family: 'Orbitron', sans-serif;
+        background: var(--gradient-cyber);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-subtitle-custom {
+        color: var(--muted-foreground);
+    }
+
+    .badge-online {
+        background-color: var(--accent) !important;
+        color: var(--background);
+        font-weight: 600;
+        animation: pulse 2s infinite;
+    }
+
+    .badge-offline {
+        background-color: var(--destructive) !important;
+        color: var(--foreground);
+        font-weight: 600;
+    }
+
+    .badge-on {
+        background-color: var(--primary) !important;
+        color: var(--primary-foreground);
+        font-weight: 600;
+    }
+
+    .badge-off {
+        background-color: var(--destructive) !important;
+        color: var(--foreground);
+        font-weight: 600;
+    }
+
+    .btn-custom {
+        padding: 0.8rem 1.8rem;
+        border: none;
+        border-radius: 0.6rem;
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        text-decoration: none;
+        outline: none;
+    }
+
+    .btn-outline-custom {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--foreground);
+    }
+
+    .btn-outline-custom:hover {
+        border-color: var(--primary);
+        background: hsla(195, 100%, 50%, 0.15);
+        color: var(--primary);
+    }
+
+    .btn-outline-primary-custom {
+        background: transparent;
+        border: 1px solid var(--primary);
+        color: var(--primary);
+    }
+
+    .btn-outline-primary-custom:hover {
+        background: hsla(195, 100%, 50%, 0.2);
+        color: var(--foreground);
+    }
+
+    .text-light {
+        color: var(--foreground) !important;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2.5rem;
+        background: var(--gradient-cyber);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 2rem;
+    }
+
+    /* Animations */
+    @keyframes subtle-gradient-shift {
+        0% {
+            background-position: 0% 0%, 0% 0%, 0% 0%, 0 0, 0 0;
+        }
+
+        100% {
+            background-position: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+        }
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.7);
+        }
+
+        70% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(var(--accent-rgb), 0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0);
+        }
+    }
+
+    /* --- Gauge Specific Styles (Base for all 8 modules) --- */
+    .gauge-grid {
+        display: grid;
+        /* Force 4 columns for 2x4 layout */
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.8rem;
+        margin-top: 1.5rem;
+        justify-content: center;
+        align-items: stretch;
+        /* Ensure all items stretch to fill row height */
+    }
+
+    /* Common styles for all 8 rectangular modules */
+    .gauge-box,
+    .relay-gauge-box,
+    .action-button-gauge {
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        height: 120px;
+        /* Consistent height for rectangular look */
+        width: 100%;
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s ease, background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .gauge-box:hover,
+    .relay-gauge-box:hover,
+    .action-button-gauge:hover {
+        transform: translateY(-3px);
+    }
+
+    /* Styles for the standard gauges (Voltage, Current, Power, kWh, Freq, PF) */
+    .gauge-box {
+        background-color: var(--gauge-bg-color);
+        /* Base background for gauges */
+    }
+
+    .gauge-box h6 {
+        font-size: 0.75rem;
+        /* Smaller font for labels */
+        color: var(--muted-foreground);
+        margin-bottom: 0.4rem;
+        /* Reduced margin */
+        font-family: 'Inter', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Speedometer Gauge Styling */
+    .gauge-svg {
+        width: 90px;
+        /* Adjusted width for compact view */
+        height: 45px;
+        /* Adjusted height for compact view (maintaining 2:1 aspect for semi-circle) */
+        overflow: hidden;
+        margin-bottom: 0.4rem;
+        /* Reduced margin */
+    }
+
+    .gauge-arc-bg {
+        fill: none;
+        stroke: #333;
+        /* Darker background arc */
+        stroke-width: 6;
+        /* Slightly thinner arc */
+        stroke-linecap: round;
+    }
+
+    .gauge-arc-fill {
+        fill: none;
+        stroke: var(--gauge-fill-color);
+        stroke-width: 6;
+        /* Slightly thinner arc */
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.5s ease-out;
+        /* Smooth fill animation */
+    }
+
+    .gauge-needle {
+        transform-origin: 50px 50px;
+        /* Center of the SVG viewBox remains the same */
+        transition: transform 0.5s ease-out;
+        /* Smooth needle movement */
+        fill: var(--gauge-needle-color);
+        stroke: var(--gauge-needle-color);
+        stroke-width: 1;
+    }
+
+    .gauge-value-display {
+        display: flex;
+        align-items: baseline;
+        gap: 0.2rem;
+    }
+
+    .gauge-value {
+        font-size: 1rem;
+        /* Adjusted font size for readability */
+        font-weight: 700;
+        color: var(--gauge-text-color);
+        font-family: 'Orbitron', sans-serif;
+        /* Futuristic font for values */
+    }
+
+    .gauge-unit {
+        font-size: 0.65rem;
+        /* Smaller unit text */
+        color: var(--gauge-unit-color);
+        margin-left: 0.1rem;
+        /* Small space after value */
+    }
+
+    /* Relay Status Module - Distinct Appearance */
+    .relay-gauge-box {
+        background-color: hsla(260, 60%, 65%, 0.2);
+        /* Use secondary color tint */
+        border-color: var(--secondary);
+        color: var(--secondary);
+        /* Text color for relay */
+        gap: 0.2rem;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .relay-gauge-box.on {
+        background-color: hsla(195, 100%, 50%, 0.2);
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .relay-gauge-box.off {
+        background-color: hsla(0, 84%, 60%, 0.2);
+        color: var(--destructive);
+        border-color: var(--destructive);
+    }
+
+    .relay-gauge-box h6 {
+        font-size: 0.75rem;
+        color: var(--secondary);
+        /* Match the box text color */
+        margin-bottom: 0.4rem;
+        font-family: 'Inter', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .relay-gauge-box .lucide {
+        font-size: 1.5rem;
+        margin-bottom: 0.2rem;
+    }
+
+    /* View Details Button Module - Distinct Appearance */
+    .action-button-gauge {
+        background-color: hsla(180, 100%, 50%, 0.2);
+        /* Use accent color tint */
+        border-color: var(--accent);
+        color: var(--accent);
+        /* Text color for button */
+        text-decoration: none;
+        font-weight: 700;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 0.5rem;
+    }
+
+    .action-button-gauge:hover {
+        color: var(--foreground);
+        background-color: hsla(180, 100%, 50%, 0.4);
+        /* Darker tint on hover */
+        border-color: var(--accent);
+    }
+
+    .action-button-gauge .lucide {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: inherit;
+        /* Inherit color from parent (.action-button-gauge) */
+    }
+
+    .action-button-gauge h6 {
+        font-size: 0.75rem;
+        color: var(--accent);
+        /* Match the button text color */
+        margin-bottom: 0.4rem;
+        font-family: 'Inter', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Specific style for device-api-key */
+    .device-api-key {
+        font-family: 'Source Code Pro', monospace;
+        /* Monospace font for key */
+        font-size: 0.8rem;
+        color: var(--muted-foreground);
+        margin-bottom: 1rem;
+        /* Space below it */
+        word-break: break-all;
+        /* Ensure long keys wrap */
+        white-space: normal;
+        text-align: left;
+        /* Align left */
+        border: 1px dashed var(--border);
+        /* Dashed border for visual separation */
+        padding: 0.5rem;
+        border-radius: 0.3rem;
+        background-color: hsla(222, 47%, 8%, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="animated-grid"></div>
+<div class="container-fluid-custom">
+    <h2 class="mb-4 text-light">My Smart Devices</h2>
+
+    {% if devices_with_latest_data %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for item in devices_with_latest_data %}
+        <div class="col" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1 }}00">
+            <div class="card-custom h-100 p-4" data-device-id="{{ item.device.id }}">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title-custom">{{ item.device.name }}</h5>
+                    <h6 class="card-subtitle-custom mb-3">{{ item.device.get_device_type_display }}</h6>
+
+                    {# Device API Key Display #}
+                    <p class="device-api-key">
+                        <strong class="text-white">API Key:</strong> {{ item.device.device_api_key|default:"N/A" }}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong class="text-white">Status:</strong>
+                        {% if item.device.is_online %}
+                        <span class="badge badge-online">Online</span>
+                        {% else %}
+                        <span class="badge badge-offline">Offline</span>
+                        {% endif %}
+                    </p>
+                    <p class="card-text mb-3" style="font-size: 0.9rem; color: var(--muted-foreground);">
+                        <strong class="text-white">Last Seen:</strong> <span class="last-seen-text">{{item.device.last_seen|default:"N/A" }}</span>
+                    </p>
+
+                    {# --- GAUGES AND CONTROL SECTION (All in one grid) --- #}
+                    {% if item.device.device_type == 'power_monitor' %}
+                    <div class="gauge-grid">
+                        {# Voltage Gauge #}
+                        <div class="gauge-box" id="voltage-gauge-{{ item.device.id }}">
+                            <h6>Voltage</h6>
+                            <svg class="gauge-svg" viewBox="0 0 100 50">
+                                <path class="gauge-arc-bg" d="M10 50 A40 40 0 0 1 90 50" />
+                                <path class="gauge-arc-fill" d="M10 50 A40 40 0 0 1 90 50"
+                                    style="stroke-dasharray: 0 125.66;" />
+                                <polygon class="gauge-needle" points="50,50 48,15 52,15"
+                                    transform="rotate(-90 50 50)" />
+                            </svg>
+                            <div class="gauge-value-display">
+                                <span class="gauge-value">N/A</span><span class="gauge-unit">V</span>
+                            </div>
+                        </div>
+
+                        {# Current Gauge #}
+                        <div class="gauge-box" id="current-gauge-{{ item.device.id }}">
+                            <h6>Current</h6>
+                            <svg class="gauge-svg" viewBox="0 0 100 50">
+                                <path class="gauge-arc-bg" d="M10 50 A40 40 0 0 1 90 50" />
+                                <path class="gauge-arc-fill" d="M10 50 A40 40 0 0 1 90 50"
+                                    style="stroke-dasharray: 0 125.66;" />
+                                <polygon class="gauge-needle" points="50,50 48,15 52,15"
+                                    transform="rotate(-90 50 50)" />
+                            </svg>
+                            <div class="gauge-value-display">
+                                <span class="gauge-value">N/A</span><span class="gauge-unit">A</span>
+                            </div>
+                        </div>
+
+                        {# Power Gauge #}
+                        <div class="gauge-box" id="power-gauge-{{ item.device.id }}">
+                            <h6>Power</h6>
+                            <svg class="gauge-svg" viewBox="0 0 100 50">
+                                <path class="gauge-arc-bg" d="M10 50 A40 40 0 0 1 90 50" />
+                                <path class="gauge-arc-fill" d="M10 50 A40 40 0 0 1 90 50"
+                                    style="stroke-dasharray: 0 125.66;" />
+                                <polygon class="gauge-needle" points="50,50 48,15 52,15"
+                                    transform="rotate(-90 50 50)" />
+                            </svg>
+                            <div class="gauge-value-display">
+                                <span class="gauge-value">N/A</span><span class="gauge-unit">W</span>
+                            </div>
+                        </div>
+
+                        {# kWh Gauge #}
+                        <div class="gauge-box" id="kwh-gauge-{{ item.device.id }}">
+                            <h6>Energy (kWh)</h6>
+                            <svg class="gauge-svg" viewBox="0 0 100 50">
+                                <path class="gauge-arc-bg" d="M10 50 A40 40 0 0 1 90 50" />
+                                <path class="gauge-arc-fill" d="M10 50 A40 40 0 0 1 90 50"
+                                    style="stroke-dasharray: 0 125.66;" />
+                                <polygon class="gauge-needle" points="50,50 48,15 52,15"
+                                    transform="rotate(-90 50 50)" />
+                            </svg>
+                            <div class="gauge-value-display">
+                                <span class="gauge-value">N/A</span><span class="gauge-unit">kWh</span>
+                            </div>
+                        </div>
+
+                        {# Frequency Gauge #}
+                        <div class="gauge-box" id="frequency-gauge-{{ item.device.id }}">
+                            <h6>Frequency</h6>
+                            <svg class="gauge-svg" viewBox="0 0 100 50">
+                                <path class="gauge-arc-bg" d="M10 50 A40 40 0 0 1 90 50" />
+                                <path class="gauge-arc-fill" d="M10 50 A40 40 0 0 1 90 50"
+                                    style="stroke-dasharray: 0 125.66;" />
+                                <polygon class="gauge-needle" points="50,50 48,15 52,15"
+                                    transform="rotate(-90 50 50)" />
+                            </svg>
+                            <div class="gauge-value-display">
+                                <span class="gauge-value">N/A</span><span class="gauge-unit">Hz</span>
+                            </div>
+                        </div>
+
+                        {# Power Factor Gauge #}
+                        <div class="gauge-box" id="pf-gauge-{{ item.device.id }}">
+                            <h6>Power Factor</h6>
+                            <svg class="gauge-svg" viewBox="0 0 100 50">
+                                <path class="gauge-arc-bg" d="M10 50 A40 40 0 0 1 90 50" />
+                                <path class="gauge-arc-fill" d="M10 50 A40 40 0 0 1 90 50"
+                                    style="stroke-dasharray: 0 125.66;" />
+                                <polygon class="gauge-needle" points="50,50 48,15 52,15"
+                                    transform="rotate(-90 50 50)" />
+                            </svg>
+                            <div class="gauge-value-display">
+                                <span class="gauge-value">N/A</span><span class="gauge-unit">PF</span>
+                            </div>
+                        </div>
+
+                        {# Relay Status Gauge #}
+                        <div class="relay-gauge-box {% if item.latest_data.relay_state %}on{% else %}off{% endif %}"
+                            id="relay-status-gauge-{{ item.device.id }}">
+                            <h6>Relay Status</h6>
+                            {% if item.latest_data.relay_state %}
+                            <i class="lucide lucide-power text-primary"></i><span>ON</span>
+                            {% else %}
+                            <i class="lucide lucide-power-off text-destructive"></i><span>OFF</span>
+                            {% endif %}
+                        </div>
+
+                        {# View Details & Control Button (Styled like a gauge) #}
+                        <a href="{% url 'dashboard:device_detail' item.device.id %}" class="action-button-gauge">
+                            <h6>View Details</h6>
+                            <i class="lucide lucide-settings"></i>
+                        </a>
+                    </div>
+                    {% elif item.device.device_type == 'water_level' %}
+                    <div class="mt-auto">
+                        <p class="card-text">
+                            <strong class="text-white">Water Level:</strong> <span class="water-level-value"
+                                style="color: var(--primary);">
+                                {{item.latest_data.water_level|default:"N/A" }}</span>%
+                        </p>
+                        <a href="{% url 'dashboard:device_detail' item.device.id %}"
+                            class="btn-custom btn-outline-primary-custom mt-3">View Details & Control</a>
+                    </div>
+                    {% else %}
+                    <div class="mt-auto">
+                        <p class="card-text text-muted">No specific data available for this device type.</p>
+                        <a href="{% url 'dashboard:device_detail' item.device.id %}"
+                            class="btn-custom btn-outline-primary-custom mt-3">View Details & Control</a>
+                    </div>
+                    {% endif %}
+                    {# --- END GAUGES AND CONTROL SECTION --- #}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center" role="alert"
+        style="background: var(--gradient-glass); border-color: var(--primary); color: var(--foreground);">
+        You don't have any devices registered yet. <a href="{% url 'add_device_to_user' %}" class="alert-link"
+            style="color: var(--primary);">Set up a new device</a> to get started!
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            mirror: false
+        });
+
+        // Function to format the timestamp for human readability
+        function formatLastSeen(timestamp) {
+            if (!timestamp || timestamp === 'N/A') return 'N/A';
+            try {
+                const date = new Date(timestamp);
+                if (isNaN(date.getTime())) {
+                    return 'Invalid Date';
+                }
+                const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                return date.toLocaleString('en-US', options);
+            } catch (e) {
+                console.error("Error formatting timestamp:", timestamp, e);
+                return 'N/A';
+            }
+        }
+
+        /**
+         * Updates a speedometer-style gauge.
+         * @param {string} gaugeElementId The ID of the gauge's container div.
+         * @param {number} value The current value to display.
+         * @param {number} maxValue The maximum value for the gauge.
+         * @param {string} unit The unit to display.
+         */
+        function updateGauge(gaugeElementId, value, maxValue, unit) {
+            const gaugeBox = document.getElementById(gaugeElementId);
+            if (!gaugeBox) return;
+
+            const needle = gaugeBox.querySelector('.gauge-needle');
+            const fillArc = gaugeBox.querySelector('.gauge-arc-fill');
+            const valueDisplay = gaugeBox.querySelector('.gauge-value');
+            const unitDisplay = gaugeBox.querySelector('.gauge-unit');
+
+            if (!needle || !fillArc || !valueDisplay || !unitDisplay) return;
+
+            const numericValue = typeof value === 'number' ? value : parseFloat(value);
+            const clampedValue = isNaN(numericValue) ? 0 : Math.max(0, Math.min(numericValue, maxValue));
+
+            const rotation = (clampedValue / maxValue) * 180 - 90;
+            // CRITICAL FIX: Ensure backticks are used for template literal
+            needle.style.transform = `rotate(${rotation}deg)`; 
+
+            const arcRadius = 40;
+            const arcLength = Math.PI * arcRadius;
+            const fillPercentage = clampedValue / maxValue;
+            const filledLength = arcLength * fillPercentage;
+            const remainingLength = arcLength - filledLength;
+
+            fillArc.style.strokeDasharray = `${filledLength} ${remainingLength}`;
+            
+            valueDisplay.textContent = typeof numericValue === 'number' && !isNaN(numericValue) ? numericValue.toFixed(1) : 'N/A';
+            unitDisplay.textContent = unit;
+        }
+
+        /**
+         * Updates the relay status gauge.
+         * @param {string} relayGaugeElementId The ID of the relay gauge's container div.
+         * @param {boolean|string} state The state of the relay (true/false or "ON"/"OFF").
+         */
+        function updateRelayGauge(relayGaugeElementId, state) {
+            const relayBox = document.getElementById(relayGaugeElementId);
+            if (!relayBox) return;
+
+            const iconElement = relayBox.querySelector('.lucide');
+            const textElement = relayBox.querySelector('span');
+
+            if (!iconElement || !textElement) return;
+
+            const isRelayOn = (typeof state === 'boolean' && state) || (typeof state === 'string' && state.toUpperCase() === 'ON');
+
+            if (isRelayOn) {
+                relayBox.classList.remove('off');
+                relayBox.classList.add('on');
+                iconElement.classList.remove('lucide-power-off');
+                iconElement.classList.add('lucide-power');
+                iconElement.style.color = 'inherit'; // Ensure color inheritance
+                textElement.textContent = 'ON';
+            } else {
+                relayBox.classList.remove('on');
+                relayBox.classList.add('off');
+                iconElement.classList.remove('lucide-power');
+                iconElement.classList.add('lucide-power-off');
+                iconElement.style.color = 'inherit'; // Ensure color inheritance
+                textElement.textContent = 'OFF';
+            }
+        }
+
+        function updateDashboard() {
+            const deviceCards = document.querySelectorAll('.card-custom');
+            deviceCards.forEach(card => {
+                const deviceId = card.getAttribute('data-device-id');
+                if (!deviceId) return;
+
+                fetch(`/api/v1/device/${deviceId}/latest_data/`)
+                    .then(response => {
+                        if (!response.ok) {
+                            console.error(`HTTP error! Status: ${response.status} for device ${deviceId}`);
+                            throw new Error(`Network response was not ok, status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Received data for device', deviceId, ':', data); 
+
+                        if (data) {
+                            // Update last seen and status badge
+                            const lastSeenElement = card.querySelector('.last-seen-text');
+                            if (lastSeenElement) {
+                                lastSeenElement.textContent = formatLastSeen(data.device.last_seen);
+                            }
+                            const statusBadge = card.querySelector('.badge');
+                            if (statusBadge) {
+                                if (data.device.is_online) { 
+                                    statusBadge.textContent = 'Online';
+                                    statusBadge.className = 'badge badge-online';
+                                } else {
+                                    statusBadge.textContent = 'Offline';
+                                    statusBadge.className = 'badge badge-offline';
+                                }
+                            }
+
+                            if (data.device.device_type === 'power_monitor' && data.latest_data) {
+                                const power = data.latest_data.power ?? 0;
+                                const voltage = data.latest_data.voltage ?? 0;
+                                const current = data.latest_data.current ?? 0;
+                                const kwh = data.latest_data.kwh ?? 0;
+                                const frequency = data.latest_data.frequency ?? 0;
+                                // IMPORTANT: Use 'power_factor' if that's what your backend sends, else 'pf'
+                                const pf = data.latest_data.power_factor ?? data.latest_data.pf ?? 0; 
+                                const relayState = data.latest_data.relay_state; 
+                                
+                                console.log('Power monitor data extracted:', {power, voltage, current, kwh, frequency, pf, relayState}); 
+
+                                updateGauge(`voltage-gauge-${deviceId}`, voltage, 250, 'V');
+                                updateGauge(`current-gauge-${deviceId}`, current, 20, 'A');
+                                updateGauge(`power-gauge-${deviceId}`, power, 5000, 'W');
+                                updateGauge(`kwh-gauge-${deviceId}`, kwh, 1000, 'kWh'); 
+                                updateGauge(`frequency-gauge-${deviceId}`, frequency, 60, 'Hz');
+                                updateGauge(`pf-gauge-${deviceId}`, pf, 1.0, 'PF'); 
+
+                                updateRelayGauge(`relay-status-gauge-${deviceId}`, relayState);
+                            } else if (data.device.device_type === 'water_level' && data.latest_data) {
+                                const waterLevelElement = card.querySelector('.water-level-value');
+                                if (waterLevelElement) waterLevelElement.textContent = data.latest_data.water_level || 'N/A';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching latest data for device', deviceId, ':', error);
+                    });
+            });
+        }
+
+        updateDashboard();
+        setInterval(updateDashboard, 5000);
+    });
+</script>
+
+
+{% endblock %}
